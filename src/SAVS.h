@@ -22,22 +22,12 @@
  *  please refer to <http://www.gnu.org/licenses/>.
  */
 
-#include "sampler.h"
-#include "predict.h"
-#include "dmvnorm.h"
-#include "SAVS.h"
+#ifndef _SAVS_H
+#define _SAVS_H
 
-using namespace Rcpp;
+//#define ARMA_NO_DEBUG // disables bounds checks
+#include <RcppArmadillo.h>
 
-static const R_CallMethodDef CallEntries[] = {
-    {"sampler", (DL_FUNC) &sampler, 35},
-    {"predict", (DL_FUNC) &predict, 3},
-    {"dmvnorm", (DL_FUNC) &dmvnorm, 4},
-    {"DSAVS", (DL_FUNC) &DSAVS, 1},
-    {NULL, NULL, 0}
-};
+RcppExport SEXP DSAVS(const SEXP);
 
-RcppExport void R_init_factorstochvol(DllInfo *dll) {
-    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
-    R_useDynamicSymbols(dll, FALSE);
-}
+#endif
