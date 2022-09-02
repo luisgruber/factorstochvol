@@ -942,3 +942,15 @@ orderident <- function(x, method = "summed") {
  }
  x
 }
+
+
+#' DSAVS
+#'
+#' @param fsvdraws_in Object of class \code{'fsvdraws'}, usually resulting from a call
+#' to \code{\link{fsvsample}}.
+#'
+#' @export
+fsvdsavs <- function(fsvdraws_in) {
+  .Call(`DSAVS`, fsvdraws_in, PACKAGE = "factorstochvol")
+}
+

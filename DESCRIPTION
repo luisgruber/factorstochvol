@@ -18,7 +18,7 @@ Suggests:
     RColorBrewer,
     testthat (>= 2.1.0),
     zoo
-LinkingTo: Rcpp, RcppArmadillo (>= 0.9.900), stochvol
+LinkingTo: Rcpp, RcppArmadillo (>= 0.9.900), stochvol, RcppProgress
 RoxygenNote: 7.1.2
 BuildResaveData: best
 VignetteBuilder: knitr
