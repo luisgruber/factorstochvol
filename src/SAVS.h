@@ -28,6 +28,16 @@
 //#define ARMA_NO_DEBUG // disables bounds checks
 #include <RcppArmadillo.h>
 
-RcppExport SEXP DSAVS(const SEXP);
+RcppExport SEXP DSAVS(const SEXP, const SEXP t_to_store);
+RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP t_to_store);
+void facload_sparse(arma::mat& Facload_sparse_t,
+                    arma::vec& eigs_t,
+                    double& n_active,
+                    const arma::mat Fac,
+                    const arma::mat Faclogvar,
+                    const arma::mat Facload,
+                    const int t,
+                    const arma::uvec match_ind);
+RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in);
 
 #endif

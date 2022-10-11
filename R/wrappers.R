@@ -1212,3 +1212,21 @@ vecdmvnorm <- function(x, means, vars, log = FALSE, tol = 10^6 * .Machine$double
 
  .Call("dmvnorm", x, means, vars, log, PACKAGE = "factorstochvol")
 }
+
+#' Predict bla bla
+#'
+#' @param fsvdraws 
+#' @param ahead 
+#'
+#' @export
+#'
+predsavs <- function(fsvdraws, ahead){
+  ahead <- sort(ahead)
+  out <- .Call("predsavs_cpp", fsvdraws, ahead, PACKAGE = "factorstochvol")
+  m <- ncol(fsvdraws$y)
+  draws <- dim(fsvdraws$facload)[3]
+  r <- dim(fsvdraws$facload)[2]
+  out$Facload_sparse_pred <- array(out$Facload_sparse_pred, c(m,r,draws,length(ahead)))
+  class(out) <- "sparse_preds"
+  out
+}
