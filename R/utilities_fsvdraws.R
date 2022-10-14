@@ -960,7 +960,12 @@ fsvdsavs <- function(fsvdraws_in, t_to_store) {
 #' to \code{\link{fsvsample}}.
 #'
 #' @export
-fsvdsavs2 <- function(fsvdraws_in, t_to_store) {
-  .Call(`DSAVS2`, fsvdraws_in, t_to_store,PACKAGE = "factorstochvol")
+fsvdsavs2 <- function(fsvdraws, each, store_everything) {
+  out <- .Call(`DSAVS2`, fsvdraws, each, store_everything, PACKAGE = "factorstochvol")
+  draws <- dim(fsvdraws$facload)[3]
+  m <- dim(fsvdraws$facload)[1]
+  r <- dim(fsvdraws$facload)[2]
+  out$Facload_t_draws <- array(out$Facload_t_draws, c(m,r,draws,length(each)))
+  out
 }
 

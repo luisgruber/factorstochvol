@@ -4,10 +4,12 @@
 \alias{predsavs}
 \title{Predict bla bla}
 \usage{
-predsavs(fsvdraws)
+predsavs(fsvdraws, ahead)
 }
 \arguments{
 \item{fsvdraws}{}
+
+\item{ahead}{}
 }
 \description{
 Predict bla bla

@@ -183,12 +183,15 @@ RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in){
 }
 
 
-RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP t_to_store){
+RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP each_in,
+                       const SEXP store_all_in){
   
   const List fsvdraws(fsvdraws_in);
-  IntegerVector t_ind_tmp(t_to_store);
-  arma::ivec t_ind(t_ind_tmp.begin(), t_ind_tmp.size() , false);
+  IntegerVector each(each_in);
+  each = each - 1;
+  arma::ivec t_ind(each.begin(), each.size() , false);
   const int n_t = t_ind.n_elem;
+  const bool store_all = as<bool>(store_all_in);
   // extract factors, factorloadings and log variances
   arma::cube Fac_draws = fsvdraws["fac"];
   arma::cube Facload_draws = fsvdraws["facload"];
@@ -219,6 +222,16 @@ RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP t_to_store){
   arma::mat active_sparse_store(n_t,draws);
   arma::cube eigs_store(n_t, r, draws);
   arma::cube Facload_sparse_t_store_tmp(m, r, draws);
+  
+  int mr0 = 0;
+  int draws0 = 0;
+  int n_t0 = 0;
+  if(store_all){
+    mr0 = mr0 + m*r;
+    draws0 = draws0 +draws;
+    n_t0 = n_t0 + n_t;
+  }
+  arma::cube Facload_sparse_t_store(mr0, draws0, n_t0);
   arma::cube Facload_sparse_t_summary(m, r, n_t);
   
   // Initialize progressbar
@@ -246,6 +259,9 @@ RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP t_to_store){
       p.increment();
     }
     Facload_t_summary_tmp = reshape( mat(Facload_sparse_t_store_tmp.memptr(), Facload_sparse_t_store_tmp.n_elem, 1, false), m*r, draws);
+    if(store_all){
+      Facload_sparse_t_store.slice(jj) = Facload_t_summary_tmp;
+    }
     Facload_t_summary_tmp2 = arma::median(Facload_t_summary_tmp, 1); 
     Facload_sparse_t_summary.slice(jj) = reshape( mat(Facload_t_summary_tmp2.memptr(), Facload_t_summary_tmp2.n_elem, 1, true), m, r);
     
@@ -255,7 +271,9 @@ RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP t_to_store){
   List out = List::create(
     Named("eigenvalues") = eigs_store,
     Named("active") = active_sparse_store,
-    Named("Facload_t_medians") = Facload_sparse_t_summary
+    Named("Facload_t_medians") = Facload_sparse_t_summary,
+    Named("Facload_t_draws") = Facload_sparse_t_store,
+    Named("bool") = store_all
   );
   
   return out;
@@ -266,6 +284,7 @@ RcppExport SEXP DSAVS(const SEXP fsvdraws_in, const SEXP t_to_store){
   
   const List fsvdraws(fsvdraws_in);
   IntegerVector t_ind_tmp(t_to_store);
+  t_ind_tmp = t_ind_tmp - 1;
   arma::ivec t_ind(t_ind_tmp.begin(), t_ind_tmp.size() , false);
   const int n_t = t_ind.n_elem;
   // extract factors, factorloadings and log variances

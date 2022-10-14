@@ -4,7 +4,7 @@
 \alias{fsvdsavs2}
 \title{DSAVS2}
 \usage{
-fsvdsavs2(fsvdraws_in, t_to_store)
+fsvdsavs2(fsvdraws, each, store_everything)
 }
 \arguments{
 \item{fsvdraws_in}{Object of class \code{'fsvdraws'}, usually resulting from a call
