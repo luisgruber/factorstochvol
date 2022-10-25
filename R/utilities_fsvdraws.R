@@ -965,7 +965,10 @@ fsvdsavs2 <- function(fsvdraws, each, store_everything) {
   draws <- dim(fsvdraws$facload)[3]
   m <- dim(fsvdraws$facload)[1]
   r <- dim(fsvdraws$facload)[2]
-  out$Facload_t_draws <- array(out$Facload_t_draws, c(m,r,draws,length(each)))
+  if(store_everything){
+    out$Facload_t_draws <- array(out$Facload_t_draws, c(m,r,draws,length(each)))
+    
+  }    
   out
 }
 

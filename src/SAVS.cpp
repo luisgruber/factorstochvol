@@ -117,6 +117,11 @@ RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in){
   logvars_plus_preds.rows(0,(n-1)) = logvars;
   arma::cube facs_plus_preds(r, n+ahead_max, draws); //ahead_max
   facs_plus_preds.cols(0,(n-1)) = facs;
+  
+  arma::uvec match_ind(r);
+  for(int i = 0; i<r; i++){
+    match_ind(i) = i;
+  }
 
   int count = 0;
   for(int h = 0; h < ahead_max; h++){
@@ -149,27 +154,25 @@ RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in){
     // stack factors and their predictions
     facs_plus_preds.col(n+h) = fac_preds; //+h
     
-    arma::uvec match_ind(r);
-    for(int i = 0; i<r; i++){
-      match_ind(i) = i;
-    }
     
-    for(int rep=0; rep<draws; rep++){
-      arma::mat tmp0 = facs_plus_preds(span(), span(0,n+h), span(rep));
-      arma::mat fac_pred = trans(tmp0);
-      facload_sparse(Facload_sparse_pred,
-                     eigs_t,
-                     n_active,
-                     fac_pred,
-                     logvars_plus_preds( span(0, n+h), span(m, m+r-1), span(rep) ),
-                     facloads.slice(rep),
-                     n+h,//+h
-                     match_ind);
-      if(h == ahead(count)-1){
+    if(h == ahead(count)-1){
+      for(int rep=0; rep<draws; rep++){
+        arma::mat tmp0 = facs_plus_preds(span(), span(0,n+h), span(rep));
+        arma::mat fac_pred = trans(tmp0);
+        facload_sparse(Facload_sparse_pred,
+                       eigs_t,
+                       n_active,
+                       fac_pred,
+                       logvars_plus_preds( span(0, n+h), span(m, m+r-1), span(rep) ),
+                       facloads.slice(rep),
+                       n+h,//+h
+                       match_ind);
+        
         Facload_sparse_pred_store(span(), span(rep), span(count)) = Facload_sparse_pred.as_col();
-        count++; 
+        
       }
-          }
+      count++;
+    }
     
   }
   
