@@ -30,7 +30,7 @@
 
 RcppExport SEXP DSAVS(const SEXP, const SEXP t_to_store);
 RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP each_in,
-                       const SEXP store_all_in);
+                       const SEXP store_all_in, const SEXP type_in);
 void facload_sparse(arma::mat& Facload_sparse_t,
                     arma::vec& eigs_t,
                     double& n_active,
