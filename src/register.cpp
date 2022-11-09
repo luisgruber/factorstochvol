@@ -35,7 +35,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"dmvnorm", (DL_FUNC) &dmvnorm, 4},
     {"DSAVS", (DL_FUNC) &DSAVS, 2},
     {"DSAVS2", (DL_FUNC) &DSAVS2, 4},
-    {"predsavs_cpp", (DL_FUNC) &predsavs_cpp, 2},
+    {"predsavs_cpp", (DL_FUNC) &predsavs_cpp, 4},
     {NULL, NULL, 0}
 };
 

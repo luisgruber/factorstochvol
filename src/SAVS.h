@@ -39,6 +39,8 @@ void facload_sparse(arma::mat& Facload_sparse_t,
                     const arma::mat Facload,
                     const int t,
                     const arma::uvec match_ind);
-RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in);
+RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in,
+                             const SEXP penalty_type_in,
+                             const SEXP type_in);
 
 #endif

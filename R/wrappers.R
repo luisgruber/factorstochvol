@@ -1220,9 +1220,9 @@ vecdmvnorm <- function(x, means, vars, log = FALSE, tol = 10^6 * .Machine$double
 #'
 #' @export
 #'
-predsavs <- function(fsvdraws, ahead){
+predsavs <- function(fsvdraws, ahead, penalty_type, type){
   ahead <- sort(ahead)
-  out <- .Call("predsavs_cpp", fsvdraws, ahead, PACKAGE = "factorstochvol")
+  out <- .Call("predsavs_cpp", fsvdraws, ahead, penalty_type, type, PACKAGE = "factorstochvol")
   m <- ncol(fsvdraws$y)
   draws <- dim(fsvdraws$facload)[3]
   r <- dim(fsvdraws$facload)[2]
