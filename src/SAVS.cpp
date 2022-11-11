@@ -226,9 +226,11 @@ RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP each_in,
                        const SEXP store_all_in, const SEXP type_in){
   
   const List fsvdraws(fsvdraws_in);
+  //arma::ivec each = as<arma::ivec>(each_in);
   IntegerVector each(each_in);
-  each = each - 1;
-  arma::ivec t_ind(each.begin(), each.size() , false);
+  //each = each - 1; !!! overwrites function input (not if arma::ivec ???)
+  const arma::ivec t_ind0(each.begin(), each.size() , false);
+  arma::ivec t_ind = t_ind0 - 1;
   const int n_t = t_ind.n_elem;
   const bool store_all = as<bool>(store_all_in);
   const std::string type = as<std::string>(type_in);
