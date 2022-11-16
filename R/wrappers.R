@@ -1220,12 +1220,28 @@ vecdmvnorm <- function(x, means, vars, log = FALSE, tol = 10^6 * .Machine$double
 #'
 #' @export
 #'
-predsavs <- function(fsvdraws, ahead, penalty_type, type){
+predsavs <- function(fsvdraws, ahead, penalty_type, nu=2, type){
   ahead <- sort(ahead)
-  out <- .Call("predsavs_cpp", fsvdraws, ahead, penalty_type, type, PACKAGE = "factorstochvol")
-  m <- ncol(fsvdraws$y)
+  
   draws <- dim(fsvdraws$facload)[3]
+  m <- dim(fsvdraws$facload)[1]
   r <- dim(fsvdraws$facload)[2]
+  
+  if(is.numeric(penalty_type)){
+    type_vec <- rep_len(penalty_type, r)
+    penalty_type <- "numeric"
+  }else{
+    if(!(penalty_type %in% c("eigen", "communalities", "communalities2"))){
+      stop("penalty_type can either be a single numeric value or a numeric vector; or one 
+           of 'eigen', 'communalities' or 'communalities2'!")
+    }
+    type_vec <- as.numeric(NA)
+  }
+  
+  penalty_type_in <- list(type = penalty_type, type_vec = type_vec)
+  
+  out <- .Call("predsavs_cpp", fsvdraws, ahead, penalty_type_in, nu, type, PACKAGE = "factorstochvol")
+  
   out$Facload_sparse_pred <- array(out$Facload_sparse_pred, c(m,r,draws,length(ahead)))
   class(out) <- "sparse_preds"
   out

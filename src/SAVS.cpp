@@ -31,18 +31,20 @@ arma::rowvec savs(const arma::mat X, const arma::rowvec b, const double nu,
 // This function computes a sparse loading matrix for time t given one sample 
 // of the joint posterior of all relevant parameters. 
 void facload_sparse(arma::mat& Facload_sparse_t,
-                    arma::vec& penalty_t_prep,
+                    arma::vec& penalty_t,
                     const arma::mat Fac,
                     const arma::mat Faclogvar,
                     const arma::vec Idilogvar,
                     const arma::mat Facload,
                     const arma::rowvec Facvol_t,
                     const arma::uvec match_ind,
-                    const std::string type){
+                    const std::string type,
+                    const double nu,
+                    const arma::vec type_vec){
   
   const int m = Facload_sparse_t.n_rows;
   const int r = Facload_sparse_t.n_cols;
-  arma::vec penalty_t(r);
+  arma::vec penalty_t_prep(r);
   arma::uvec reorder(r);
   
   arma::mat normalizer = exp(Faclogvar/2);
@@ -78,12 +80,22 @@ void facload_sparse(arma::mat& Facload_sparse_t,
     arma::rowvec avg_prop_by_facs = mean(prop_by_facs_per_series,0);
     penalty_t_prep = trans(avg_prop_by_facs);
     penalty_t = square(max(penalty_t_prep) / penalty_t_prep);
+  }else if(type == "communalities2"){
+    arma::mat Facload2_t = square(Facload_t);
+    arma::vec var_by_facs = sum(Facload2_t, 1);
+    arma::mat prop_by_facs_per_series = Facload2_t.each_col()/var_by_facs;
+    arma::rowvec avg_prop_by_facs = mean(prop_by_facs_per_series,0);
+    penalty_t_prep = trans(avg_prop_by_facs);
+    penalty_t = square(max(penalty_t_prep) / penalty_t_prep);
+  }else if(type == "numeric"){
+    penalty_t_prep = type_vec;
+    penalty_t = type_vec;
   }
   
   for(int i = 0; i < m; i++){
     
     Facload_sparse_t.row(i) = savs(Fac_norm, 
-                              Facload_t.row(i), 2, penalty_t.t());
+                              Facload_t.row(i), nu, penalty_t.t());
   }
   
   if(type == "eigen"){
@@ -94,14 +106,19 @@ void facload_sparse(arma::mat& Facload_sparse_t,
 
 RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in,
                              const SEXP penalty_type_in,
+                             const SEXP nu_in,
                              const SEXP type_in){
   
   const List fsvdraws(fsvdraws_in);
   IntegerVector ahead_tmp(ahead_in);
   arma::ivec ahead(ahead_tmp.begin(), ahead_tmp.size(), false);
   const int ahead_max = max(ahead);
-  const std::string penalty_type = as<std::string>(penalty_type_in);
   const int type = as<int>(type_in);
+  const List penalty_type_list(penalty_type_in);
+  const double nu = as<double>(nu_in);
+  
+  const std::string penalty_type = penalty_type_list["type"];
+  const arma::vec penalty_type_vec = penalty_type_list["type_vec"];
   
   // extract factors, factorloadings and log variances
   arma::cube facs = fsvdraws["fac"];
@@ -134,7 +151,7 @@ RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in,
   arma::cube logvar_pred_store(m+r, draws, ahead.size());
   
   //init
-  arma::vec penalty_t_prep(r);
+  arma::vec penalty_t(r);
   arma::mat Facload_sparse_pred(m,r);
   
   ///////////////////////////////////
@@ -195,14 +212,16 @@ RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in,
         arma::mat tmp0 = facs_plus_preds(span(), span(0,nh), span(rep));
         arma::mat fac_pred = trans(tmp0);
         facload_sparse(Facload_sparse_pred,
-                       penalty_t_prep,
+                       penalty_t,
                        fac_pred,
                        logvars_plus_preds( span(0, nh), span(m, m+r-1), span(rep) ),
                        logvar_preds( span(0, m-1), span(rep) ),
                        facloads.slice(rep),
                        exp(logvar_preds( span(m, m+r-1), span(rep) )/2),//+h
                        match_ind,
-                       penalty_type);
+                       penalty_type,
+                       nu,
+                       penalty_type_vec);
         
         Facload_sparse_pred_store(span(), span(rep), span(count)) = Facload_sparse_pred.as_col();
         
@@ -223,17 +242,19 @@ RcppExport SEXP predsavs_cpp(const SEXP fsvdraws_in, const SEXP ahead_in,
 
 
 RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP each_in,
-                       const SEXP store_all_in, const SEXP type_in){
+                       const SEXP store_all_in, const SEXP type_in,
+                       const SEXP nu_in){
   
   const List fsvdraws(fsvdraws_in);
-  //arma::ivec each = as<arma::ivec>(each_in);
   IntegerVector each(each_in);
-  //each = each - 1; !!! overwrites function input (not if arma::ivec ???)
-  const arma::ivec t_ind0(each.begin(), each.size() , false);
-  arma::ivec t_ind = t_ind0 - 1;
-  const int n_t = t_ind.n_elem;
+  const int n_t = each.size();
   const bool store_all = as<bool>(store_all_in);
-  const std::string type = as<std::string>(type_in);
+  const List type_list(type_in);
+  const double nu = as<double>(nu_in);
+  
+  const std::string type = type_list["type"];
+  const arma::vec type_vec = type_list["type_vec"];
+  
   // extract factors, factorloadings and log variances
   arma::cube Fac_draws = fsvdraws["fac"];
   arma::cube Facload_draws = fsvdraws["facload"];
@@ -252,7 +273,7 @@ RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP each_in,
   arma::mat Faclogvar(size(Fac));
   arma::vec Idilogvar(m);
   arma::rowvec Facvol_t(r);
-  arma::vec penalty_t_prep(r);
+  arma::vec penalty_t(r);
   arma::rowvec n_active_tmp(r);
   int n_active=0; //int
   
@@ -282,25 +303,27 @@ RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP each_in,
   
   // Initialize progressbar
   Progress p(n_t*draws, true);
-  arma::ivec::iterator t;
+  IntegerVector::iterator t;
   int jj=0;
-  for(t = t_ind.begin(); t != t_ind.end(); t++){
+  for(t = each.begin(); t != each.end(); ++t){
     for(int rep = 0; rep < draws; rep++){
       Fac = trans(Fac_draws.slice(rep));
       Faclogvar = Faclogvar_draws.slice(rep);
-      Idilogvar = Idilogvar_draws( span(*t), span(), span(rep));
+      Idilogvar = Idilogvar_draws( span(*t-1), span(), span(rep));
       Facload = Facload_draws.slice(rep);
-      Facvol_t = exp(Faclogvar_draws( span(*t), span(), span(rep))/2);
+      Facvol_t = exp(Faclogvar_draws( span(*t-1), span(), span(rep))/2);
       
       facload_sparse(Facload_sparse_t,
-                     penalty_t_prep,
+                     penalty_t,
                      Fac,
                      Faclogvar,
                      Idilogvar,
                      Facload,
                      Facvol_t,
                      match_ind,
-                     type);
+                     type,
+                     nu,
+                     type_vec);
       
       n_active_tmp = sum(abs(Facload_sparse_t), 0);
       n_active_tmp.elem(find(n_active_tmp>0)).ones();
@@ -308,7 +331,7 @@ RcppExport SEXP DSAVS2(const SEXP fsvdraws_in, const SEXP each_in,
       
       active_sparse_store(jj, rep) = n_active;
       Facload_sparse_t_store_tmp.slice(rep) = Facload_sparse_t;
-      penalty_store( span(jj, jj), span(0, r-1), span(rep, rep) ) = penalty_t_prep;
+      penalty_store( span(jj, jj), span(0, r-1), span(rep, rep) ) = penalty_t;
       p.increment();
     }
     Facload_t_summary_tmp = reshape( mat(Facload_sparse_t_store_tmp.memptr(), Facload_sparse_t_store_tmp.n_elem, 1, false), m*r, draws);
