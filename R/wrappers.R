@@ -1220,7 +1220,10 @@ vecdmvnorm <- function(x, means, vars, log = FALSE, tol = 10^6 * .Machine$double
 #'
 #' @export
 #'
-predsavs <- function(fsvdraws, ahead, penalty_type, nu=2, type){
+predsavs <- function(fsvdraws, ahead, penalty_type, nu=2, type, seed = NULL){
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
   ahead <- sort(ahead)
   
   draws <- dim(fsvdraws$facload)[3]
@@ -1241,6 +1244,50 @@ predsavs <- function(fsvdraws, ahead, penalty_type, nu=2, type){
   penalty_type_in <- list(type = penalty_type, type_vec = type_vec)
   
   out <- .Call("predsavs_cpp", fsvdraws, ahead, penalty_type_in, nu, type, PACKAGE = "factorstochvol")
+  
+  out$Facload_sparse_pred <- array(out$Facload_sparse_pred, c(m,r,draws,length(ahead)))
+  class(out) <- "sparse_preds"
+  out
+}
+
+#' Predict bla bla
+#'
+#' @param fsvdraws 
+#' @param ahead 
+#'
+#' @export
+#'
+predsavs_beta <- function(fsvdraws, ahead, penalty_type, nu=2, type, seed = NULL){
+  
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
+  
+  fsvdraws <- fsvdraws[c("facload", "fac", "logvar", "para")]
+  ## IMPORTANT: transpose of facs aperm(fsvdraws$fac,c(2,1,3))
+  fsvdraws$fac <- aperm(fsvdraws$fac,c(2,1,3))
+  
+  ahead <- sort(ahead)
+  
+  draws <- dim(fsvdraws$facload)[3]
+  m <- dim(fsvdraws$facload)[1]
+  r <- dim(fsvdraws$facload)[2]
+  
+  if(is.numeric(penalty_type)){
+    type_vec <- rep_len(penalty_type, r)
+    penalty_type <- "numeric"
+  }else{
+    if(!(penalty_type %in% c("eigen", "communalities", "communalities2"))){
+      stop("penalty_type can either be a single numeric value or a numeric vector; or one 
+           of 'eigen', 'communalities' or 'communalities2'!")
+    }
+    type_vec <- as.numeric(NA)
+  }
+  
+  penalty_type_in <- list(type = penalty_type, type_vec = type_vec)
+  
+  #out <- .Call("predsavs_cpp_beta", fsvdraws$facload, aperm(fsvdraws$fac,c(2,1,3)), fsvdraws$logvar, fsvdraws$para, ahead, penalty_type_in, nu, type, PACKAGE = "factorstochvol")
+  out <- .Call("predsavs_cpp_beta", fsvdraws, ahead, penalty_type_in, nu, type, PACKAGE = "factorstochvol")
   
   out$Facload_sparse_pred <- array(out$Facload_sparse_pred, c(m,r,draws,length(ahead)))
   class(out) <- "sparse_preds"

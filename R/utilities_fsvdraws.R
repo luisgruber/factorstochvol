@@ -988,3 +988,37 @@ fsvdsavs2 <- function(fsvdraws, each, store_everything, type, nu=2) {
   out
 }
 
+#' DSAVS3
+#'
+#' @param fsvdraws_in Object of class \code{'fsvdraws'}, usually resulting from a call
+#' to \code{\link{fsvsample}}.
+#'
+#' @export
+fsvdsavs3 <- function(fsvdraws, each, store_everything, type, nu=2) {
+  obj <- fsvdraws[c("facload", "fac", "logvar")]
+  draws <- dim(obj$facload)[3]
+  m <- dim(obj$facload)[1]
+  r <- dim(obj$facload)[2]
+  
+  if(is.numeric(type)){
+    type_vec <- rep_len(type, r)
+    type <- "numeric"
+  }else{
+    if(!(type %in% c("eigen", "communalities", "communalities2"))){
+      stop("type can either be a single numeric value or a numeric vector; or one 
+           of 'eigen', 'communalities' or 'communalities2'!")
+    }
+    type_vec <- as.numeric(NA)
+  }
+  
+  type_in <- list(type = type, type_vec = type_vec)
+  
+  out <- .Call(`DSAVS3`, obj$facload, obj$fac, obj$logvar, each, store_everything, type_in, nu, PACKAGE = "factorstochvol")
+  
+  if(store_everything){
+    out$Facload_t_draws <- array(out$Facload_t_draws, c(m,r,draws,length(each)))
+    
+  }    
+  out
+}
+
