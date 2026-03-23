@@ -24,6 +24,7 @@
 
 #include <RcppArmadillo.h>
 #include "sampler.h"
+#include "../inst/include/factorstochvol.h"
 
 using namespace Rcpp;
 
@@ -152,6 +153,7 @@ List sampler(NumericMatrix y, const int draws,
   
   //current mixture indicator draws
   arma::umat curmixind(T, mpr);
+  Rcpp::XPtr curmixind_xptr(&curmixind, false);
   
   // shrinkage prior:
   // NA means: use N(0,tau2)-prior with tau2 fixed
@@ -213,7 +215,7 @@ List sampler(NumericMatrix y, const int draws,
   // "expert" settings:
   const double B011inv         = 1./B011_in;
   const double B022inv         = 1./B022_in;
-  const stochvol::ExpertSpec_FastSV expert_idi {
+  stochvol::ExpertSpec_FastSV expert_idi {
     parameterization > 2,  // interweave
     stochvol::Parameterization::CENTERED,  // centered_baseline always
     B011inv,
@@ -223,7 +225,8 @@ List sampler(NumericMatrix y, const int draws,
                 MHcontrol,
                 truncnormal ? stochvol::ExpertSpec_FastSV::ProposalPhi::REPEATED_ACCEPT_REJECT_NORMAL : stochvol::ExpertSpec_FastSV::ProposalPhi::IMMEDIATE_ACCEPT_REJECT_NORMAL
   };
-  const stochvol::ExpertSpec_FastSV expert_fac {
+  Rcpp::XPtr<stochvol::ExpertSpec_FastSV> expert_idi_ptr(&expert_idi, false);
+  stochvol::ExpertSpec_FastSV expert_fac {
     parameterization > 2,  // interweave
     stochvol::Parameterization::CENTERED,  // centered_baseline always
     B011inv,
@@ -233,7 +236,7 @@ List sampler(NumericMatrix y, const int draws,
                 MHcontrol,
                 truncnormal ? stochvol::ExpertSpec_FastSV::ProposalPhi::REPEATED_ACCEPT_REJECT_NORMAL : stochvol::ExpertSpec_FastSV::ProposalPhi::IMMEDIATE_ACCEPT_REJECT_NORMAL
   };
-  
+  Rcpp::XPtr<stochvol::ExpertSpec_FastSV> expert_fac_ptr(&expert_fac, false);
   // moment-matched IG-prior
   const NumericVector C0 = 1.5*Bsigma;
   
@@ -261,6 +264,7 @@ List sampler(NumericMatrix y, const int draws,
       };
     }
   }
+  Rcpp::XPtr<std::vector<stochvol::PriorSpec>> prior_specs_ptr(&prior_specs, false);
   
   /*
    * FINAL STORAGE (returned to R)
@@ -529,14 +533,14 @@ List sampler(NumericMatrix y, const int draws,
       Rcpp::checkUserInterrupt();
     }
     
-    update_fsv(armafacload,
-               armaf,
-               armah,
-               armah0,
-               curpara_arma,
-               armatau2,
-               armalambda2,
-               curmixind,
+    factorstochvol::update_fsv(curfacload,
+               curf,
+               curh,
+               curh0,
+               curpara,
+               curtau2,
+               curlambda2,
+               curmixind_xptr,
                armay,
                facloadtol,
                armarestr,
@@ -553,9 +557,9 @@ List sampler(NumericMatrix y, const int draws,
                offset,
                sv, // heteroskedastic,
                interweaving,
-               expert_idi,
-               expert_fac,
-               prior_specs,
+               expert_idi_ptr,
+               expert_fac_ptr,
+               prior_specs_ptr,
                B011inv,
                samplefac,
                signswitch,

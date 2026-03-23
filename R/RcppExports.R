@@ -13,3 +13,7 @@ sampler <- function(y, draws, burnin, startval_in, bmu, Bmu, priorphi, Bsigma, p
     .Call(`_factorstochvol_sampler`, y, draws, burnin, startval_in, bmu, Bmu, priorphi, Bsigma, priorbeta, model_mean, shrinkagepriors, thin, auxstore, thintime, quiet, parameterization, MHsteps, B011_in, B022_in, MHcontrol, Gammaprior, offset, truncnormal, restr, interweaving, signswitch, runningstore, runningstoreevery, runningstoremoments, pfl, sv, priorhomoskedastic, priorh0, samplefac, facloadtol)
 }
 
+# Register entry points for exported C++ functions
+methods::setLoadAction(function(ns) {
+    .Call(`_factorstochvol_RcppExport_registerCCallable`)
+})

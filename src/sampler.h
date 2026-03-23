@@ -29,7 +29,7 @@
 #include <RcppArmadillo.h>
 #include <stochvol.h>  // decl'd and def'd in "stochvol" (univariate SV-update)
 #include "progutils.h"
-#include "update_fsv.h"
+// #include "update_fsv.h"
 
 double do_rgig1(double lambda, double chi, double psi);
 

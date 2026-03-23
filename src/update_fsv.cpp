@@ -21,7 +21,7 @@
  *  along with the R package factorstochvol. If that is not the case,
  *  please refer to <http://www.gnu.org/licenses/>.
  */
-
+// [[Rcpp::interfaces(cpp)]]
 #include <RcppArmadillo.h>
 #include <stochvol.h>
 #include "sampler.h"
@@ -29,14 +29,15 @@
 using namespace Rcpp;
 using namespace arma;
 
-void update_fsv(arma::mat& facload,
-                arma::mat& fac,
-                arma::mat& logvar, //!!! if a factor is assumed to be homoskedastic (i.e. the corresponding element in heteroskedastic is 'false'), the corresponding column in logvar has to be initialized with 0s, otherwise the sampler will crash!
-                arma::vec& logvar0,
-                arma::mat& svpara,
-                arma::mat& tau2,
-                arma::vec& lambda2, // !!! if(ngprior==true) {if (columnwise==true) of length 'r', else of length 'm'} else of length 0 !!! not necessarily needed (as initial value) for sampling, however we want to store posterior draws
-                arma::umat& curmixind, // not necessarily needed (as initial value) for sampling, however we want to store posterior draws
+// [[Rcpp::export(rng=false)]]
+void update_fsv(NumericMatrix facload_rcpp,
+                NumericMatrix fac_rcpp,
+                NumericMatrix logvar_rcpp, //!!! if a factor is assumed to be homoskedastic (i.e. the corresponding element in heteroskedastic is 'false'), the corresponding column in logvar has to be initialized with 0s, otherwise the sampler will crash!
+                NumericVector logvar0_rcpp,
+                NumericMatrix svpara_rcpp,
+                NumericMatrix tau2_rcpp,
+                NumericVector lambda2_rcpp, // !!! if(ngprior==true) {if (columnwise==true) of length 'r', else of length 'm'} else of length 0 !!! not necessarily needed (as initial value) for sampling, however we want to store posterior draws
+                Rcpp::XPtr<arma::umat> curmixind_xptr, // not necessarily needed (as initial value) for sampling, however we want to store posterior draws
                 const arma::mat& y,
                 const double& facloadtol,
                 const arma::imat& restriction,
@@ -53,14 +54,27 @@ void update_fsv(arma::mat& facload,
                 const double& offset,
                 const Rcpp::NumericVector heteroskedastic,
                 const int& interweaving, // !!! cf documentation, which interweaving strategy can be employed in your case (if all(heteroskedastic==true) best option is 4 (deep interweaving), if some factors are homoscedastic 4 not possible, hence use 3 (shallow interweaving))
-                const stochvol::ExpertSpec_FastSV& expert_idi,
-                const stochvol::ExpertSpec_FastSV& expert_fac,
-                const std::vector<stochvol::PriorSpec>& prior_specs,
+                const Rcpp::XPtr<stochvol::ExpertSpec_FastSV> expert_idi_ptr,
+                const Rcpp::XPtr<stochvol::ExpertSpec_FastSV> expert_fac_ptr,
+                const Rcpp::XPtr<std::vector<stochvol::PriorSpec>> prior_specs_ptr,
                 const double& B011inv,
                 const bool& samplefac,
                 const bool& signswitch,
                 const int& i// rep
 ){
+  
+  arma::mat facload(facload_rcpp.begin(), facload_rcpp.nrow(), facload_rcpp.ncol(), false);
+  arma::mat fac(fac_rcpp.begin(), fac_rcpp.nrow(), fac_rcpp.ncol(), false);
+  arma::mat logvar(logvar_rcpp.begin(), logvar_rcpp.nrow(), logvar_rcpp.ncol(), false);
+  arma::vec logvar0(logvar0_rcpp.begin(), logvar0_rcpp.length(), false);
+  arma::mat svpara(svpara_rcpp.begin(), svpara_rcpp.nrow(), svpara_rcpp.ncol(), false);
+  arma::mat tau2(tau2_rcpp.begin(), tau2_rcpp.nrow(), tau2_rcpp.ncol(), false);
+  arma::vec lambda2(lambda2_rcpp.begin(), lambda2_rcpp.length(), false);
+  // arma::imat curmixind(curmixind_rcpp.begin(), curmixind_rcpp.nrow(), curmixind_rcpp.ncol(), false);
+  arma::umat* curmixind = curmixind_xptr.get();
+  stochvol::ExpertSpec_FastSV* expert_idi = expert_idi_ptr.get();
+  stochvol::ExpertSpec_FastSV* expert_fac = expert_fac_ptr.get();
+  std::vector<stochvol::PriorSpec>* prior_specs = prior_specs_ptr.get();
   
   const int m = y.n_rows;
   const int r = facload.n_cols;
@@ -88,11 +102,13 @@ void update_fsv(arma::mat& facload,
     if (heteroskedastic(j) == true) {
       double curh0j = logvar0(j);
       arma::vec curh_j = logvar.unsafe_col(j);
-      arma::uvec curmixind_j = curmixind.unsafe_col(j);
+      arma::uvec curmixind_j = curmixind->unsafe_col(j);
+      // arma::uvec curmixind_j = curmixind.unsafe_col(j);
       double mu = svpara.at(0, j),
         phi = svpara.at(1, j),
         sigma = svpara.at(2, j);
-      stochvol::update_fast_sv(armaynorm.row(j).t(), mu, phi, sigma, curh0j, curh_j, curmixind_j, prior_specs[j], expert_idi);
+      const stochvol::PriorSpec& prior_spec_j = (*prior_specs)[j];
+      stochvol::update_fast_sv(armaynorm.row(j).t(), mu, phi, sigma, curh0j, curh_j, curmixind_j, prior_spec_j, expert_idi);
       svpara.at(0, j) = mu;
       svpara.at(1, j) = phi;
       svpara.at(2, j) = sigma;
@@ -114,11 +130,12 @@ void update_fsv(arma::mat& facload,
     if (heteroskedastic(j) == true) {
       double curh0j = logvar0(j);
       arma::vec curh_j = logvar.unsafe_col(j);
-      arma::uvec curmixind_j = curmixind.unsafe_col(j);
+      arma::uvec curmixind_j = curmixind->unsafe_col(j);
       double mu = 0,  //svpara.at(0, j),
         phi = svpara.at(1, j),
         sigma = svpara.at(2, j);
-      stochvol::update_fast_sv(armafnorm.row(j-m).t(), mu, phi, sigma, curh0j, curh_j, curmixind_j, prior_specs[j], expert_fac);
+      const stochvol::PriorSpec& prior_spec_j = (*prior_specs)[j];
+      stochvol::update_fast_sv(armafnorm.row(j-m).t(), mu, phi, sigma, curh0j, curh_j, curmixind_j, prior_spec_j, expert_fac);
       svpara.at(0, j) = 0;
       svpara.at(1, j) = phi;
       svpara.at(2, j) = sigma;

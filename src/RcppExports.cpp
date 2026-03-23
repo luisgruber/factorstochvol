@@ -2,8 +2,11 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include "../inst/include/factorstochvol.h"
+#include "../inst/include/factorstochvol_types.h"
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
+#include <string>
+#include <set>
 
 using namespace Rcpp;
 
@@ -83,4 +86,96 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(sampler(y, draws, burnin, startval_in, bmu, Bmu, priorphi, Bsigma, priorbeta, model_mean, shrinkagepriors, thin, auxstore, thintime, quiet, parameterization, MHsteps, B011_in, B022_in, MHcontrol, Gammaprior, offset, truncnormal, restr, interweaving, signswitch, runningstore, runningstoreevery, runningstoremoments, pfl, sv, priorhomoskedastic, priorh0, samplefac, facloadtol));
     return rcpp_result_gen;
 END_RCPP
+}
+// update_fsv
+void update_fsv(NumericMatrix facload_rcpp, NumericMatrix fac_rcpp, NumericMatrix logvar_rcpp, NumericVector logvar0_rcpp, NumericMatrix svpara_rcpp, NumericMatrix tau2_rcpp, NumericVector lambda2_rcpp, Rcpp::XPtr<arma::umat> curmixind_xptr, const arma::mat& y, const double& facloadtol, const arma::imat& restriction, const arma::uvec& facloadtunrestrictedelements, const arma::irowvec& nonzerospercol, const arma::icolvec& nonzerosperrow, const Rcpp::NumericVector priorh0, const bool& ngprior, const bool& columnwise, const Rcpp::NumericVector aShrink, const Rcpp::NumericVector cShrink, const Rcpp::NumericVector dShrink, const Rcpp::NumericMatrix priorhomoskedastic, const double& offset, const Rcpp::NumericVector heteroskedastic, const int& interweaving, const Rcpp::XPtr<stochvol::ExpertSpec_FastSV> expert_idi_ptr, const Rcpp::XPtr<stochvol::ExpertSpec_FastSV> expert_fac_ptr, const Rcpp::XPtr<std::vector<stochvol::PriorSpec>> prior_specs_ptr, const double& B011inv, const bool& samplefac, const bool& signswitch, const int& i);
+static SEXP _factorstochvol_update_fsv_try(SEXP facload_rcppSEXP, SEXP fac_rcppSEXP, SEXP logvar_rcppSEXP, SEXP logvar0_rcppSEXP, SEXP svpara_rcppSEXP, SEXP tau2_rcppSEXP, SEXP lambda2_rcppSEXP, SEXP curmixind_xptrSEXP, SEXP ySEXP, SEXP facloadtolSEXP, SEXP restrictionSEXP, SEXP facloadtunrestrictedelementsSEXP, SEXP nonzerospercolSEXP, SEXP nonzerosperrowSEXP, SEXP priorh0SEXP, SEXP ngpriorSEXP, SEXP columnwiseSEXP, SEXP aShrinkSEXP, SEXP cShrinkSEXP, SEXP dShrinkSEXP, SEXP priorhomoskedasticSEXP, SEXP offsetSEXP, SEXP heteroskedasticSEXP, SEXP interweavingSEXP, SEXP expert_idi_ptrSEXP, SEXP expert_fac_ptrSEXP, SEXP prior_specs_ptrSEXP, SEXP B011invSEXP, SEXP samplefacSEXP, SEXP signswitchSEXP, SEXP iSEXP) {
+BEGIN_RCPP
+    Rcpp::traits::input_parameter< NumericMatrix >::type facload_rcpp(facload_rcppSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type fac_rcpp(fac_rcppSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type logvar_rcpp(logvar_rcppSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type logvar0_rcpp(logvar0_rcppSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type svpara_rcpp(svpara_rcppSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tau2_rcpp(tau2_rcppSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lambda2_rcpp(lambda2_rcppSEXP);
+    Rcpp::traits::input_parameter< Rcpp::XPtr<arma::umat> >::type curmixind_xptr(curmixind_xptrSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const double& >::type facloadtol(facloadtolSEXP);
+    Rcpp::traits::input_parameter< const arma::imat& >::type restriction(restrictionSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type facloadtunrestrictedelements(facloadtunrestrictedelementsSEXP);
+    Rcpp::traits::input_parameter< const arma::irowvec& >::type nonzerospercol(nonzerospercolSEXP);
+    Rcpp::traits::input_parameter< const arma::icolvec& >::type nonzerosperrow(nonzerosperrowSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector >::type priorh0(priorh0SEXP);
+    Rcpp::traits::input_parameter< const bool& >::type ngprior(ngpriorSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type columnwise(columnwiseSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector >::type aShrink(aShrinkSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector >::type cShrink(cShrinkSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector >::type dShrink(dShrinkSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix >::type priorhomoskedastic(priorhomoskedasticSEXP);
+    Rcpp::traits::input_parameter< const double& >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector >::type heteroskedastic(heteroskedasticSEXP);
+    Rcpp::traits::input_parameter< const int& >::type interweaving(interweavingSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::XPtr<stochvol::ExpertSpec_FastSV> >::type expert_idi_ptr(expert_idi_ptrSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::XPtr<stochvol::ExpertSpec_FastSV> >::type expert_fac_ptr(expert_fac_ptrSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::XPtr<std::vector<stochvol::PriorSpec>> >::type prior_specs_ptr(prior_specs_ptrSEXP);
+    Rcpp::traits::input_parameter< const double& >::type B011inv(B011invSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type samplefac(samplefacSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type signswitch(signswitchSEXP);
+    Rcpp::traits::input_parameter< const int& >::type i(iSEXP);
+    update_fsv(facload_rcpp, fac_rcpp, logvar_rcpp, logvar0_rcpp, svpara_rcpp, tau2_rcpp, lambda2_rcpp, curmixind_xptr, y, facloadtol, restriction, facloadtunrestrictedelements, nonzerospercol, nonzerosperrow, priorh0, ngprior, columnwise, aShrink, cShrink, dShrink, priorhomoskedastic, offset, heteroskedastic, interweaving, expert_idi_ptr, expert_fac_ptr, prior_specs_ptr, B011inv, samplefac, signswitch, i);
+    return R_NilValue;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _factorstochvol_update_fsv(SEXP facload_rcppSEXP, SEXP fac_rcppSEXP, SEXP logvar_rcppSEXP, SEXP logvar0_rcppSEXP, SEXP svpara_rcppSEXP, SEXP tau2_rcppSEXP, SEXP lambda2_rcppSEXP, SEXP curmixind_xptrSEXP, SEXP ySEXP, SEXP facloadtolSEXP, SEXP restrictionSEXP, SEXP facloadtunrestrictedelementsSEXP, SEXP nonzerospercolSEXP, SEXP nonzerosperrowSEXP, SEXP priorh0SEXP, SEXP ngpriorSEXP, SEXP columnwiseSEXP, SEXP aShrinkSEXP, SEXP cShrinkSEXP, SEXP dShrinkSEXP, SEXP priorhomoskedasticSEXP, SEXP offsetSEXP, SEXP heteroskedasticSEXP, SEXP interweavingSEXP, SEXP expert_idi_ptrSEXP, SEXP expert_fac_ptrSEXP, SEXP prior_specs_ptrSEXP, SEXP B011invSEXP, SEXP samplefacSEXP, SEXP signswitchSEXP, SEXP iSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        rcpp_result_gen = PROTECT(_factorstochvol_update_fsv_try(facload_rcppSEXP, fac_rcppSEXP, logvar_rcppSEXP, logvar0_rcppSEXP, svpara_rcppSEXP, tau2_rcppSEXP, lambda2_rcppSEXP, curmixind_xptrSEXP, ySEXP, facloadtolSEXP, restrictionSEXP, facloadtunrestrictedelementsSEXP, nonzerospercolSEXP, nonzerosperrowSEXP, priorh0SEXP, ngpriorSEXP, columnwiseSEXP, aShrinkSEXP, cShrinkSEXP, dShrinkSEXP, priorhomoskedasticSEXP, offsetSEXP, heteroskedasticSEXP, interweavingSEXP, expert_idi_ptrSEXP, expert_fac_ptrSEXP, prior_specs_ptrSEXP, B011invSEXP, samplefacSEXP, signswitchSEXP, iSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        (Rf_error)("%s", CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
+
+// validate (ensure exported C++ functions exist before calling them)
+static int _factorstochvol_RcppExport_validate(const char* sig) { 
+    static std::set<std::string> signatures;
+    if (signatures.empty()) {
+        signatures.insert("void(*update_fsv)(NumericMatrix,NumericMatrix,NumericMatrix,NumericVector,NumericMatrix,NumericMatrix,NumericVector,Rcpp::XPtr<arma::umat>,const arma::mat&,const double&,const arma::imat&,const arma::uvec&,const arma::irowvec&,const arma::icolvec&,const Rcpp::NumericVector,const bool&,const bool&,const Rcpp::NumericVector,const Rcpp::NumericVector,const Rcpp::NumericVector,const Rcpp::NumericMatrix,const double&,const Rcpp::NumericVector,const int&,const Rcpp::XPtr<stochvol::ExpertSpec_FastSV>,const Rcpp::XPtr<stochvol::ExpertSpec_FastSV>,const Rcpp::XPtr<std::vector<stochvol::PriorSpec>>,const double&,const bool&,const bool&,const int&)");
+    }
+    return signatures.find(sig) != signatures.end();
+}
+
+// registerCCallable (register entry points for exported C++ functions)
+RcppExport SEXP _factorstochvol_RcppExport_registerCCallable() { 
+    R_RegisterCCallable("factorstochvol", "_factorstochvol_update_fsv", (DL_FUNC)_factorstochvol_update_fsv_try);
+    R_RegisterCCallable("factorstochvol", "_factorstochvol_RcppExport_validate", (DL_FUNC)_factorstochvol_RcppExport_validate);
+    return R_NilValue;
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"_factorstochvol_dmvnorm", (DL_FUNC) &_factorstochvol_dmvnorm, 4},
+    {"_factorstochvol_predict", (DL_FUNC) &_factorstochvol_predict, 3},
+    {"_factorstochvol_sampler", (DL_FUNC) &_factorstochvol_sampler, 35},
+    {"_factorstochvol_update_fsv", (DL_FUNC) &_factorstochvol_update_fsv, 31},
+    {"_factorstochvol_RcppExport_registerCCallable", (DL_FUNC) &_factorstochvol_RcppExport_registerCCallable, 0},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_factorstochvol(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }
