@@ -70,7 +70,7 @@ void update_fsv(NumericMatrix facload_rcpp,
   arma::mat svpara(svpara_rcpp.begin(), svpara_rcpp.nrow(), svpara_rcpp.ncol(), false);
   arma::mat tau2(tau2_rcpp.begin(), tau2_rcpp.nrow(), tau2_rcpp.ncol(), false);
   arma::vec lambda2(lambda2_rcpp.begin(), lambda2_rcpp.length(), false);
-  // arma::imat curmixind(curmixind_rcpp.begin(), curmixind_rcpp.nrow(), curmixind_rcpp.ncol(), false);
+  
   arma::umat* curmixind = curmixind_xptr.get();
   stochvol::ExpertSpec_FastSV* expert_idi = expert_idi_ptr.get();
   stochvol::ExpertSpec_FastSV* expert_fac = expert_fac_ptr.get();
@@ -103,12 +103,11 @@ void update_fsv(NumericMatrix facload_rcpp,
       double curh0j = logvar0(j);
       arma::vec curh_j = logvar.unsafe_col(j);
       arma::uvec curmixind_j = curmixind->unsafe_col(j);
-      // arma::uvec curmixind_j = curmixind.unsafe_col(j);
       double mu = svpara.at(0, j),
         phi = svpara.at(1, j),
         sigma = svpara.at(2, j);
       const stochvol::PriorSpec& prior_spec_j = (*prior_specs)[j];
-      stochvol::update_fast_sv(armaynorm.row(j).t(), mu, phi, sigma, curh0j, curh_j, curmixind_j, prior_spec_j, expert_idi);
+      stochvol::update_fast_sv(armaynorm.row(j).t(), mu, phi, sigma, curh0j, curh_j, curmixind_j, prior_spec_j, (*expert_idi));
       svpara.at(0, j) = mu;
       svpara.at(1, j) = phi;
       svpara.at(2, j) = sigma;
@@ -135,7 +134,7 @@ void update_fsv(NumericMatrix facload_rcpp,
         phi = svpara.at(1, j),
         sigma = svpara.at(2, j);
       const stochvol::PriorSpec& prior_spec_j = (*prior_specs)[j];
-      stochvol::update_fast_sv(armafnorm.row(j-m).t(), mu, phi, sigma, curh0j, curh_j, curmixind_j, prior_spec_j, expert_fac);
+      stochvol::update_fast_sv(armafnorm.row(j-m).t(), mu, phi, sigma, curh0j, curh_j, curmixind_j, prior_spec_j, (*expert_fac));
       svpara.at(0, j) = 0;
       svpara.at(1, j) = phi;
       svpara.at(2, j) = sigma;
