@@ -24,9 +24,11 @@
 
 #include <RcppArmadillo.h>
 #include "sampler.h"
-#include "../inst/include/factorstochvol.h"
 
 using namespace Rcpp;
+
+// forward declaration, see src/update_fsv.cpp for function definition
+void update_fsv(NumericMatrix facload_rcpp, NumericMatrix fac_rcpp, NumericMatrix logvar_rcpp, NumericVector logvar0_rcpp, NumericMatrix svpara_rcpp, NumericMatrix tau2_rcpp, NumericVector lambda2_rcpp, Rcpp::XPtr<arma::umat> curmixind_xptr, const arma::mat& y, const double& facloadtol, const arma::imat& restriction, const arma::uvec& facloadtunrestrictedelements, const arma::irowvec& nonzerospercol, const arma::icolvec& nonzerosperrow, const Rcpp::NumericVector priorh0, const bool& ngprior, const bool& columnwise, const Rcpp::NumericVector aShrink, const Rcpp::NumericVector cShrink, const Rcpp::NumericVector dShrink, const Rcpp::NumericMatrix priorhomoskedastic, const double& offset, const Rcpp::NumericVector heteroskedastic, const int& interweaving, const Rcpp::XPtr<stochvol::ExpertSpec_FastSV> expert_idi_ptr, const Rcpp::XPtr<stochvol::ExpertSpec_FastSV> expert_fac_ptr, const Rcpp::XPtr<std::vector<stochvol::PriorSpec>> prior_specs_ptr, const double& B011inv, const bool& samplefac, const bool& signswitch, const int& i);
 
 // rgig is imported from GIGrvg
 double do_rgig1(double lambda, double chi, double psi) {
@@ -533,7 +535,7 @@ List sampler(NumericMatrix y, const int draws,
       Rcpp::checkUserInterrupt();
     }
     
-    factorstochvol::update_fsv(curfacload,
+    update_fsv(curfacload,
                curf,
                curh,
                curh0,
